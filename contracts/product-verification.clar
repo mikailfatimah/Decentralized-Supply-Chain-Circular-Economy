@@ -1,30 +1,64 @@
+;; product-verification.clar
+;; This contract validates items in circulation within the supply chain
 
-;; title: product-verification
-;; version:
-;; summary:
-;; description:
+(define-data-var contract-owner principal tx-sender)
 
-;; traits
-;;
+;; Data structures
+(define-map products
+  { product-id: (string-ascii 36) }
+  {
+    manufacturer: principal,
+    creation-date: uint,
+    verified: bool,
+    current-owner: principal
+  }
+)
 
-;; token definitions
-;;
+;; Events
+(define-public (register-product (product-id (string-ascii 36)))
+  (let
+    ((caller tx-sender))
+    (begin
+      (asserts! (not (default-to false (get verified (map-get? products { product-id: product-id })))) (err u1))
+      (map-set products
+        { product-id: product-id }
+        {
+          manufacturer: caller,
+          creation-date: block-height,
+          verified: true,
+          current-owner: caller
+        }
+      )
+      (ok true)
+    )
+  )
+)
 
-;; constants
-;;
+(define-public (transfer-product (product-id (string-ascii 36)) (new-owner principal))
+  (let
+    ((product (unwrap! (map-get? products { product-id: product-id }) (err u2)))
+     (caller tx-sender))
+    (begin
+      (asserts! (is-eq (get current-owner product) caller) (err u3))
+      (map-set products
+        { product-id: product-id }
+        (merge product { current-owner: new-owner })
+      )
+      (ok true)
+    )
+  )
+)
 
-;; data vars
-;;
+(define-public (verify-product (product-id (string-ascii 36)))
+  (let
+    ((product (map-get? products { product-id: product-id })))
+    (if (is-some product)
+      (ok (get verified (unwrap! product (err u4))))
+      (err u4)
+    )
+  )
+)
 
-;; data maps
-;;
-
-;; public functions
-;;
-
-;; read only functions
-;;
-
-;; private functions
-;;
-
+(define-read-only (get-product-details (product-id (string-ascii 36)))
+  (map-get? products { product-id: product-id })
+)
