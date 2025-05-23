@@ -9,3 +9,5 @@ S
 #contracts/product-verification.clar,f/6/f680411921599bc420e7eda8dd85464af04b8c32
 U
 %contracts/recycling-verification.clar,6/4/640fd1f8e9525b278579b0b0437f69724934a2e3
+M
+contracts/value-recovery.clar,6/4/64e275ad8aa29e132f9736d175888ea72cabf187
